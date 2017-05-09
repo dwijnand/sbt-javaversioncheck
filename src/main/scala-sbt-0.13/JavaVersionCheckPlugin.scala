@@ -23,7 +23,7 @@ object JavaVersionCheckPlugin extends sbt.AutoPlugin {
     javaVersionCheck := {
       val log = streams.value.log
       val javac = (compileInputs in (Compile, compile)).value.compilers.javac
-      JavaVersionCheck((javaVersionPrefix in javaVersionCheck ).value, javac, log)
+      JavaVersionCheck((javaVersionPrefix in javaVersionCheck).value, javac, log)
     },
     // we hook onto deliverConfiguration to run the version check as early as possible,
     // before we actually do anything. But we don't want to require the version check
@@ -45,14 +45,14 @@ object JavaVersionCheck {
   def apply(javaVersionPrefix: Option[String], javac: JavaTool, realLog: Logger): String = {
     val captureVersionLog = new Logger() {
       var captured: Option[String] = None
-       def log(level: Level.Value, message: => String): Unit = {
-         val m = message
-         if (level == Level.Warn && m.startsWith("javac ")) {
-           captured = Some(m.substring("javac ".length).trim)
-         } else {
-           realLog.log(level, m)
-         }
-       }
+      def log(level: Level.Value, message: => String): Unit = {
+        val m = message
+        if (level == Level.Warn && m.startsWith("javac ")) {
+          captured = Some(m.substring("javac ".length).trim)
+        } else {
+          realLog.log(level, m)
+        }
+      }
       def success(message: => String): Unit = realLog.success(message)
       def trace(t: => Throwable): Unit = realLog.trace(t)
     }
@@ -60,11 +60,14 @@ object JavaVersionCheck {
       classpath = Nil,
       outputDirectory = file("."),
       options = Seq("-version"))(captureVersionLog)
-    val version: String = captureVersionLog.captured getOrElse {sys.error("failed to get or parse the output of javac -version")}
+    val version: String = captureVersionLog.captured getOrElse
+      sys.error("failed to get or parse the output of javac -version")
     javaVersionPrefix match {
       case Some(prefix) =>
         if (!version.startsWith(prefix)) {
-          sys.error(s"javac version ${version} may not be used to publish, it has to start with ${prefix} due to javaVersionPrefix setting")
+          sys.error(
+            s"javac version $version may not be used to publish, " +
+              s"it has to start with $prefix due to javaVersionPrefix setting")
         }
       case None =>
     }
